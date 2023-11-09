@@ -1,0 +1,305 @@
+{
+    "Mario": {
+        "Bothams": {
+            "lunch": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "evening": []
+        },
+        "Hole": {
+            "evening": []
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": "4"
+    },
+    "Chad": {
+        "Bothams": {
+            "lunch": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "evening": []
+        },
+        "Hole": {
+            "evening": []
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 4
+    },
+    "Julia": {
+        "Bothams": {
+            "lunch": [],
+            "evening": [
+                "Tuesday",
+                "Monday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ]
+        },
+        "Hole": {
+            "evening": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "lunch": [
+                "Saturday",
+                "Friday"
+            ]
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 4
+    },
+    "Ryan": {
+        "Bothams": {
+            "lunch": [],
+            "evening": []
+        },
+        "Hole": {
+            "evening": [
+                "Tuesday",
+                "Thursday",
+                "Friday",
+                "Saturday"
+            ]
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 4
+    },
+    "Patrick": {
+        "Bothams": {
+            "lunch": [],
+            "evening": [
+                "Friday"
+            ]
+        },
+        "Hole": {
+            "evening": [
+                "Tuesday",
+                "Wednesday",
+                "Friday",
+                "Saturday"
+            ]
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 4
+    },
+    "Patricia": {
+        "Bothams": {
+            "lunch": [],
+            "evening": [
+                "Tuesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ]
+        },
+        "Hole": {
+            "evening": [
+                "Tuesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ]
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 4
+    },
+    "Irena": {
+        "Bothams": {
+            "lunch": [],
+            "evening": [
+                "Saturday",
+                "Friday",
+                "Wednesday"
+            ]
+        },
+        "Hole": {
+            "evening": [
+                "Friday",
+                "Saturday",
+                "Monday"
+            ]
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04",
+            "2023-10-08",
+            "2023-10-09",
+            "2023-10-10",
+            "2023-10-11",
+            "2023-10-12",
+            "2023-10-13",
+            "2023-10-14",
+            "2023-10-15"
+        ],
+        "max_shifts": 3
+    },
+    "Thomas": {
+        "Bothams": {
+            "lunch": [],
+            "evening": [
+                "Tuesday",
+                "Thursday"
+            ]
+        },
+        "Hole": {
+            "evening": [
+                "Monday",
+                "Wednesday",
+                "Thursday",
+                "Sunday"
+            ]
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 4
+    },
+    "Kevin": {
+        "Bothams": {
+            "lunch": [],
+            "evening": [
+                "Monday",
+                "Saturday",
+                "Sunday"
+            ]
+        },
+        "Hole": {
+            "evening": []
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 4
+    },
+    "Erica": {
+        "Bothams": {
+            "lunch": [],
+            "evening": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ]
+        },
+        "Hole": {
+            "evening": []
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 3
+    },
+    "Taylor": {
+        "Bothams": {
+            "lunch": [],
+            "evening": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ]
+        },
+        "Hole": {
+            "evening": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "lunch": []
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": 4
+    },
+    "Anita": {
+        "Bothams": {
+            "lunch": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "evening": []
+        },
+        "Hole": {
+            "evening": [],
+            "lunch": []
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": "1"
+    },
+    "Scott": {
+        "Bothams": {
+            "lunch": [
+                "Monday",
+                "Wednesday",
+                "Thursday",
+                "Saturday",
+                "Sunday"
+            ]
+        },
+        "booked_off_dates": [],
+        "max_shifts": 1
+    }
+}
