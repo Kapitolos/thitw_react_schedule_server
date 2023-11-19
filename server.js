@@ -3,11 +3,13 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const app = express();
 const cors = require('cors');
+const router = express.Router();
 
 const Excel = require('exceljs');
 
 app.use(cors());
 app.use(bodyParser.json());
+app.use(router);
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
@@ -32,6 +34,32 @@ app.get('/staff-availability', (req, res) => {
         res.send(data);
     });
 });
+
+// Get restricted slots
+router.get('/restricted-slots', (req, res) => {
+    fs.readFile('restricted_slots.json', 'utf8', (err, data) => {
+        if (err) {
+            res.status(500).send('Error reading restricted slots');
+            return;
+        }
+        res.json(JSON.parse(data));
+    });
+});
+
+// Update restricted slots
+router.post('/restricted-slots', (req, res) => {
+    const newRestrictedSlots = req.body;
+    fs.writeFile('restricted_slots.json', JSON.stringify(newRestrictedSlots, null, 4), 'utf8', (err) => {
+        if (err) {
+            res.status(500).send('Error updating restricted slots');
+            return;
+        }
+        res.send({ success: true });
+           res.json({ success: true, message: "Restricted slots updated successfully" });
+    });
+});
+
+module.exports = router;
 
 app.post('/update-booked-dates', (req, res) => {
     console.log("Received request to update booked dates");
@@ -82,6 +110,81 @@ app.post('/update-staff-availability', (req, res) => {
 });
 
 
+app.post('/add-staff', (req, res) => {
+    const newStaffData = req.body;
+    console.log("Received request to add new staff member");
+    console.log("Data received:", newStaffData);  // Log the received data
+
+    // Read the current staff availability data
+    fs.readFile('staff_availability.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading staff_availability.json:', err);
+            res.status(500).send('Error reading from file');
+            return;
+        }
+
+        // Parse the current data and add the new staff member
+        let staffAvailability = JSON.parse(data);
+        const newStaffName = Object.keys(newStaffData)[0]; // Assuming newStaffData is an object with the staff name as the key
+
+        // Check if staff member already exists to avoid duplicates
+        if (staffAvailability[newStaffName]) {
+            res.status(400).send('Staff member already exists');
+            return;
+        }
+
+        // Add the new staff member's data
+        staffAvailability[newStaffName] = newStaffData[newStaffName];
+
+        // Write the updated data back to the JSON file
+        fs.writeFile('staff_availability.json', JSON.stringify(staffAvailability, null, 4), 'utf8', (err) => {
+            if (err) {
+                console.error('Error writing to staff_availability.json:', err);
+                res.status(500).send('Error writing to file');
+                return;
+            }
+            console.log('Successfully added new staff member to staff_availability.json');
+            res.send({ success: true, message: 'New staff member added' });
+        });
+    });
+});
+
+app.post('/remove-staff', (req, res) => {
+    const { staffName } = req.body;
+
+    // Read the current staff availability data
+    fs.readFile('staff_availability.json', 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading staff_availability.json:', err);
+            res.status(500).send('Error reading from file');
+            return;
+        }
+
+        let staffAvailability = JSON.parse(data);
+
+        // Remove the staff member if they exist
+        if (staffAvailability[staffName]) {
+            delete staffAvailability[staffName];
+
+            // Write the updated data back to the JSON file
+            fs.writeFile('staff_availability.json', JSON.stringify(staffAvailability, null, 4), 'utf8', (err) => {
+                if (err) {
+                    console.error('Error writing to staff_availability.json:', err);
+                    res.status(500).send('Error writing to file');
+                    return;
+                }
+                console.log(`Successfully removed staff member: ${staffName}`);
+                res.send({ success: true, message: `Staff member ${staffName} removed` });
+            });
+        } else {
+            res.status(404).send({ success: false, message: `Staff member ${staffName} not found` });
+        }
+    });
+});
+
+
+
+
 // Endpoint to save the schedule as an Excel file
 app.post('/save-schedule', async (req, res) => {
     console.log("SERVER STARTED SAVE ATTEMPT");
@@ -109,6 +212,24 @@ const lightGreenFill = {
     fgColor: { argb: 'FF90EE90' } // Light green
 };
 
+const yellowFill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'F5F580' } // Yellow
+};
+
+const orangeFill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFBE4D' } // Orange
+};
+
+const redFill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FD594D' } // Red
+};
+
 // Define the font style for Times New Roman
 const timesNewRomanFont = {
   name: 'Times New Roman',
@@ -123,22 +244,40 @@ headerRow.eachCell((cell) => {
   cell.fill = lightBlueFill; // Set the fill for header row cells
 });
 
-// Iterate through the properties of scheduleData to add rows to the sheet
+// Apply colors to section rows based on the section name
 Object.entries(scheduleData).forEach(([sectionName, days], index) => {
-  // Start a new row with the section name
-  const rowValues = [sectionName];
-  
-  
-  // Push the values for each day into the rowValues array
+    const rowValues = [sectionName];
+
+ // Push the values for each day into the rowValues array
   daysOfWeek.forEach(day => {
       rowValues.push(days[day] || ''); // If there's no entry for the day, push an empty string
   });
-  
-  // Add the row to the sheet and set the first cell to bold
-  const row = sheet.addRow(rowValues);
-  row.getCell(1).font = { bold: true, size: 13 };
-  row.getCell(1).fill = lightGreenFill;
+
+    // Add the row to the sheet
+    const row = sheet.addRow(rowValues);
+
+    // Apply styles based on the sectionName
+    let fill;
+    if (sectionName.toLowerCase().includes('lunch')) {
+        fill = yellowFill;
+    } else if (sectionName.toLowerCase().includes('bothams')) {
+        fill = orangeFill;
+    } else if (sectionName.toLowerCase().includes('hole')) {
+        fill = redFill;
+    }
+
+    // Set the font and fill for the first cell
+    row.getCell(1).font = { bold: true, size: 13 };
+    row.getCell(1).fill = fill;
+
+    // Optionally, you could set the fill for the entire row:
+    row.eachCell({ includeEmpty: true }, function(cell, colNumber) {
+        cell.fill = fill;
+    });
 });
+
+
+
 
 
 

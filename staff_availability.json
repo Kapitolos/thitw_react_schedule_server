@@ -106,9 +106,9 @@
         "Hole": {
             "evening": [
                 "Tuesday",
+                "Saturday",
                 "Wednesday",
-                "Friday",
-                "Saturday"
+                "Thursday"
             ]
         },
         "booked_off_dates": [
@@ -162,7 +162,6 @@
         "booked_off_dates": [
             "2023-03-28",
             "2024-04-04",
-            "2023-10-08",
             "2023-10-09",
             "2023-10-10",
             "2023-10-11",
@@ -185,7 +184,6 @@
             "evening": [
                 "Monday",
                 "Wednesday",
-                "Thursday",
                 "Sunday"
             ]
         },
@@ -201,7 +199,8 @@
             "evening": [
                 "Monday",
                 "Saturday",
-                "Sunday"
+                "Sunday",
+                "Friday"
             ]
         },
         "Hole": {
@@ -266,29 +265,6 @@
         ],
         "max_shifts": 4
     },
-    "Anita": {
-        "Bothams": {
-            "lunch": [
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday",
-                "Saturday",
-                "Sunday"
-            ],
-            "evening": []
-        },
-        "Hole": {
-            "evening": [],
-            "lunch": []
-        },
-        "booked_off_dates": [
-            "2023-03-28",
-            "2024-04-04"
-        ],
-        "max_shifts": "1"
-    },
     "Scott": {
         "Bothams": {
             "lunch": [
@@ -300,6 +276,6 @@
             ]
         },
         "booked_off_dates": [],
-        "max_shifts": 1
+        "max_shifts": "2"
     }
 }
