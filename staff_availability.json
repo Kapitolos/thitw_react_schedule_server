@@ -200,7 +200,10 @@
                 "Monday",
                 "Saturday",
                 "Sunday",
-                "Friday"
+                "Friday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday"
             ]
         },
         "Hole": {
@@ -232,7 +235,7 @@
             "2023-03-28",
             "2024-04-04"
         ],
-        "max_shifts": 3
+        "max_shifts": "2"
     },
     "Taylor": {
         "Bothams": {
@@ -277,5 +280,31 @@
         },
         "booked_off_dates": [],
         "max_shifts": "2"
+    },
+    "Anita": {
+        "Bothams": {
+            "lunch": [
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday",
+                "Sunday"
+            ],
+            "evening": []
+        },
+        "Hole": {
+            "evening": [],
+            "lunch": [
+                "Saturday",
+                "Friday"
+            ]
+        },
+        "booked_off_dates": [
+            "2023-03-28",
+            "2024-04-04"
+        ],
+        "max_shifts": "1"
     }
 }

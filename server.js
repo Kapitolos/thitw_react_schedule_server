@@ -1,10 +1,12 @@
+
 const express = require('express');
 const fs = require('fs');
 const bodyParser = require('body-parser');
+const AWS = require('aws-sdk');
 const app = express();
 const cors = require('cors');
 const router = express.Router();
-
+const stream = require('stream');
 const Excel = require('exceljs');
 
 app.use(cors());
@@ -13,131 +15,145 @@ app.use(router);
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-// Check if the server can read staff_availability.json when it starts up
-fs.readFile('staff_availability.json', 'utf8', (err, data) => {
-    if (err) {
-        console.error('Startup check: Error reading staff_availability.json:', err);
-        return;
-    }
-    console.log('Startup check: Successfully read staff_availability.json');
-    console.log('Startup check: First 100 characters of data:', data.substring(0, 100));  // Just a snippet to confirm
+// Set up AWS S3
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
 });
+
+const S3_BUCKET = process.env.AWS_BUCKET_NAME;
+console.log("S3 Bucket Name:", process.env.AWS_BUCKET_NAME);
+
+// Helper function to get JSON from S3
+function getJsonFromS3(key, callback) {
+  s3.getObject({ Bucket: S3_BUCKET, Key: key }, (err, data) => {
+    if (err) return callback(err);
+    try {
+      const json = JSON.parse(data.Body.toString());
+      callback(null, json);
+    } catch (e) {
+      callback(e);
+    }
+  });
+}
+
+// Helper function to upload JSON to S3
+function uploadJsonToS3(key, json, callback) {
+  const body = Buffer.from(JSON.stringify(json, null, 2));
+  s3.putObject({ Bucket: S3_BUCKET, Key: key, Body: body }, callback);
+}
 
 app.get('/staff-availability', (req, res) => {
-    fs.readFile('staff_availability.json', 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading staff_availability.json:', err);
-            res.status(500).send('Error reading file');
-            return;
-        }
-        console.log('Successfully read staff_availability.json during a GET request');
-        res.send(data);
-    });
+  getJsonFromS3('staff_availability.json', (err, data) => {
+    if (err) {
+      console.error('Error reading staff_availability.json:', err);
+      return res.status(500).send('Error reading file');
+    }
+    res.json(data);
+  });
 });
-
-// Get restricted slots
-router.get('/restricted-slots', (req, res) => {
-    fs.readFile('restricted_slots.json', 'utf8', (err, data) => {
-        if (err) {
-            res.status(500).send('Error reading restricted slots');
-            return;
-        }
-        res.json(JSON.parse(data));
-    });
-});
-
-// Update restricted slots
-router.post('/restricted-slots', (req, res) => {
-    const newRestrictedSlots = req.body;
-    fs.writeFile('restricted_slots.json', JSON.stringify(newRestrictedSlots, null, 4), 'utf8', (err) => {
-        if (err) {
-            res.status(500).send('Error updating restricted slots');
-            return;
-        }
-        res.send({ success: true });
-           res.json({ success: true, message: "Restricted slots updated successfully" });
-    });
-});
-
-module.exports = router;
 
 app.post('/update-booked-dates', (req, res) => {
     console.log("Received request to update booked dates");
     const updatedData = req.body;
     console.log("Data received:", updatedData);  // Log the received data
 
-    fs.writeFile('staff_availability.json', JSON.stringify(updatedData, null, 4), 'utf8', (err) => {
+    const key = 'staff_availability.json';
+
+    uploadJsonToS3(key, updatedData, (err) => {
         if (err) {
             console.error('Error writing to staff_availability.json:', err);
             res.status(500).send('Error writing to file');
             return;
         }
         console.log('Successfully updated staff_availability.json');
-        res.send({ success: true });
+        res.json({ success: true, message: "Booked dates updated successfully" });
     });
 });
 
-app.post('/update-staff-availability', (req, res) => {
-    const { staffName, updatedData } = req.body;
+router.post('/update-staff-availability', (req, res) => {
+  const { staffName, updatedData } = req.body;
 
-    if (!staffName || !updatedData) {
-        return res.status(400).json({ success: false, message: "Missing required data" });
+  if (!staffName || !updatedData) {
+    return res.status(400).json({ success: false, message: "Missing required data" });
+  }
+
+  getJsonFromS3('staff_availability.json', (err, currentData) => {
+    if (err) {
+      console.error('Error reading staff_availability.json:', err);
+      return res.status(500).send('Error reading file');
     }
 
-    // Read the current JSON
-    fs.readFile('staff_availability.json', 'utf8', (err, data) => {
+    // Update the staff member's data
+    currentData[staffName] = updatedData;
+
+    // Write the updated data back to S3
+    uploadJsonToS3('staff_availability.json', currentData, (err) => {
+      if (err) {
+        console.error('Error writing to staff_availability.json:', err);
+        return res.status(500).send('Error writing to file');
+      }
+      res.json({ success: true, message: "Staff availability updated successfully!" });
+    });
+  });
+});
+
+// Update restricted slots
+router.post('/restricted-slots', (req, res) => {
+    const newRestrictedSlots = req.body;
+    const key = 'restricted_slots.json';
+
+    uploadJsonToS3(key, newRestrictedSlots, (err) => {
         if (err) {
-            console.error('Error reading staff_availability.json:', err);
-            return res.status(500).send('Error reading file');
+            console.error('Error updating restricted slots:', err);
+            res.status(500).send('Error updating restricted slots');
+            return;
         }
+        res.json({ success: true, message: "Restricted slots updated successfully" });
+    });
+});
 
-        const currentData = JSON.parse(data);
+// Fetch restricted slots
+app.get('/restricted-slots', (req, res) => {
+    const key = 'restricted_slots.json'; // Ensure this matches your S3 file key
 
-        // Update the staff member's data
-        currentData[staffName] = updatedData;
-
-        // Write the updated data back to the JSON file
-        fs.writeFile('staff_availability.json', JSON.stringify(currentData, null, 4), 'utf8', (err) => {
-
-            if (err) {
-                console.error('Error writing to staff_availability.json:', err);
-                return res.status(500).send('Error writing to file');
-            }
-
-            res.json({ success: true, message: "Staff availability updated successfully!" });
-        });
+    s3.getObject({ Bucket: S3_BUCKET, Key: key }, (err, data) => {
+        if (err) {
+            console.error('Error fetching restricted slots:', err);
+            return res.status(500).send('Error fetching restricted slots');
+        }
+        try {
+            const slotsData = JSON.parse(data.Body.toString());
+            res.json(slotsData);
+        } catch (parseError) {
+            console.error('Error parsing restricted slots data:', parseError);
+            res.status(500).send('Error parsing restricted slots data');
+        }
     });
 });
 
 
 app.post('/add-staff', (req, res) => {
-    const newStaffData = req.body;
     console.log("Received request to add new staff member");
+    const newStaffData = req.body;
     console.log("Data received:", newStaffData);  // Log the received data
 
-    // Read the current staff availability data
-    fs.readFile('staff_availability.json', 'utf8', (err, data) => {
+    getJsonFromS3('staff_availability.json', (err, staffAvailability) => {
         if (err) {
             console.error('Error reading staff_availability.json:', err);
             res.status(500).send('Error reading from file');
             return;
         }
 
-        // Parse the current data and add the new staff member
-        let staffAvailability = JSON.parse(data);
-        const newStaffName = Object.keys(newStaffData)[0]; // Assuming newStaffData is an object with the staff name as the key
-
-        // Check if staff member already exists to avoid duplicates
+        const newStaffName = Object.keys(newStaffData)[0];
         if (staffAvailability[newStaffName]) {
             res.status(400).send('Staff member already exists');
             return;
         }
 
-        // Add the new staff member's data
         staffAvailability[newStaffName] = newStaffData[newStaffName];
-
-        // Write the updated data back to the JSON file
-        fs.writeFile('staff_availability.json', JSON.stringify(staffAvailability, null, 4), 'utf8', (err) => {
+        uploadJsonToS3('staff_availability.json', staffAvailability, (err) => {
             if (err) {
                 console.error('Error writing to staff_availability.json:', err);
                 res.status(500).send('Error writing to file');
@@ -152,22 +168,16 @@ app.post('/add-staff', (req, res) => {
 app.post('/remove-staff', (req, res) => {
     const { staffName } = req.body;
 
-    // Read the current staff availability data
-    fs.readFile('staff_availability.json', 'utf8', (err, data) => {
+    getJsonFromS3('staff_availability.json', (err, staffAvailability) => {
         if (err) {
             console.error('Error reading staff_availability.json:', err);
             res.status(500).send('Error reading from file');
             return;
         }
 
-        let staffAvailability = JSON.parse(data);
-
-        // Remove the staff member if they exist
         if (staffAvailability[staffName]) {
             delete staffAvailability[staffName];
-
-            // Write the updated data back to the JSON file
-            fs.writeFile('staff_availability.json', JSON.stringify(staffAvailability, null, 4), 'utf8', (err) => {
+            uploadJsonToS3('staff_availability.json', staffAvailability, (err) => {
                 if (err) {
                     console.error('Error writing to staff_availability.json:', err);
                     res.status(500).send('Error writing to file');
@@ -178,6 +188,32 @@ app.post('/remove-staff', (req, res) => {
             });
         } else {
             res.status(404).send({ success: false, message: `Staff member ${staffName} not found` });
+        }
+    });
+});
+
+app.post('/update-max-shifts', (req, res) => {
+    const { staffName, maxShifts } = req.body;
+
+    getJsonFromS3('staff_availability.json', (err, currentData) => {
+        if (err) {
+            console.error('Error reading staff_availability.json:', err);
+            res.status(500).send('Error reading file');
+            return;
+        }
+
+        if (currentData[staffName]) {
+            currentData[staffName].max_shifts = maxShifts;
+            uploadJsonToS3('staff_availability.json', currentData, (err) => {
+                if (err) {
+                    console.error('Error writing to staff_availability.json:', err);
+                    res.status(500).send('Error writing to file');
+                    return;
+                }
+                res.send({ success: true, message: "Max shifts updated successfully" });
+            });
+        } else {
+            res.status(404).send({ success: false, message: "Staff member not found" });
         }
     });
 });
@@ -303,33 +339,73 @@ sheet.columns.forEach((column, index) => {
     column.width = maxLength + buffer > 10 ? maxLength + buffer : 10;
 });
 
-    // Write to a file
-    try {
-        const filePath = 'schedule.xlsx';
-        await workbook.xlsx.writeFile(filePath);
-        res.json({ success: true, message: 'Schedule saved successfully!', filePath });
-    } catch (err) {
-        console.error('Error writing to schedule.xlsx:', err);
-        res.status(500).send('Error writing to file');
-    }
+    // Instead of writing to a file, write to a stream
+    const passThrough = new stream.PassThrough();
+    workbook.xlsx.write(passThrough)
+        .then(() => {
+            passThrough.end();
+        })
+        .catch(err => {
+            console.error('Error writing Excel stream:', err);
+            res.status(500).send('Error generating file');
+            return;
+        });
+
+            // Listen for errors on the stream to catch any errors that occur after initiating the upload
+    passThrough.on('error', (streamError) => {
+        console.error('Stream encountered an error:', streamError);
+        res.status(500).send('Error in stream processing');
+    });
+
+          // Upload the stream to S3
+    const filePath = 'schedule.xlsx';
+    s3.upload({
+        Bucket: S3_BUCKET,
+        Key: filePath,
+        Body: passThrough,
+        ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }, (err, data) => {
+        if (err) {
+            console.error('Error uploading to S3:', err);
+            res.status(500).send('Error uploading file');
+            return;
+        }
+        console.log('File uploaded successfully:', data.Location);
+        res.json({ success: true, message: 'Schedule saved successfully!', filePath: data.Location });
+    });
 });
 
 app.get('/download-schedule', async (req, res) => {
-    const filePath = 'schedule.xlsx';
+    // Extract the date from the query parameter
+    const date = req.query.date;
+    if (!date) {
+        return res.status(400).send('Date parameter is required');
+    }
 
-    // Set the headers
-    res.setHeader('Content-Disposition', 'attachment; filename=schedule.xlsx');
+    const filename = `Schedule_${date}.xlsx`;
+    const key = 'schedule.xlsx'; // The S3 key for the stored schedule file
+
+    // S3 getObject parameters
+    const params = {
+        Bucket: S3_BUCKET,
+        Key: key,
+    };
+
+    // Try to get the object from S3
+    const fileStream = s3.getObject(params).createReadStream();
+    fileStream.on('error', function(error) {
+        console.error('Error streaming file from S3:', error);
+        return res.status(500).send('Error streaming file');
+    });
+
+    // Set headers to suggest the filename and indicate the content type
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 
-    try {
-        // Create a read stream and pipe it to the response
-        const filestream = fs.createReadStream(filePath);
-        filestream.pipe(res);
-    } catch (err) {
-        console.error('Error sending the file:', err);
-        res.status(500).send('Error sending the file');
-    }
+    // Stream the file from S3 to the client
+    fileStream.pipe(res);
 });
+
 
 
 app.get('/test-connection', (req, res) => {
@@ -360,31 +436,8 @@ const convertScheduleToCSV = (schedule) => {
 };
 
 
-app.post('/update-max-shifts', (req, res) => {
-    const { staffName, maxShifts } = req.body;
+// The rest of the endpoints would be modified in a similar way...
 
-    fs.readFile('staff_availability.json', 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading staff_availability.json:', err);
-            res.status(500).send('Error reading file');
-            return;
-        }
-
-        const currentData = JSON.parse(data);
-        if (currentData[staffName]) {
-            currentData[staffName].max_shifts = maxShifts;
-        }
-
-        fs.writeFile('staff_availability.json', JSON.stringify(currentData, null, 4), 'utf8', (err) => {
-            if (err) {
-                console.error('Error writing to staff_availability.json:', err);
-                res.status(500).send('Error writing to file');
-                return;
-            }
-            res.send({ success: true });
-        });
-    });
-});
 app.listen(3001, () => {
-    console.log('Server started on http://localhost:3001');
+  console.log('Server started on http://localhost:3001');
 });
