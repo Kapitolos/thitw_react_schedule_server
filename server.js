@@ -437,7 +437,9 @@ const convertScheduleToCSV = (schedule) => {
 
 
 // The rest of the endpoints would be modified in a similar way...
+// Process.env.PORT is provided by Heroku, 3001 is used for local development
+const PORT = process.env.PORT || 3001;
 
-app.listen(3001, () => {
-  console.log('Server started on http://localhost:3001');
+app.listen(PORT, () => {
+  console.log(`Server started on http://localhost:${PORT}`);
 });
