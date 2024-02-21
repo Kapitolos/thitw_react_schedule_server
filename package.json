@@ -1,5 +1,5 @@
 {
-  "name": "THITW Schedule",
+  "name": "THITW-Schedule",
   "version": "1.0.0",
   "description": "THITW Schedule Generator",
   "main": "server.js",
