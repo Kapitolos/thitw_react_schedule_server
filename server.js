@@ -263,7 +263,32 @@ const orangeFill = {
 const redFill = {
     type: 'pattern',
     pattern: 'solid',
-    fgColor: { argb: 'FD594D' } // Red
+    fgColor: { argb: 'D70F0F' } // Red
+};
+
+const redFill2 = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'BC0D0D' } // Red
+};
+
+const redFill3 = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'A10B0B' } // Red
+};
+
+const redFill4 = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: '8E19A7' } // Red
+};
+
+const borderStyle = {
+    top: { style: 'thin', color: { argb: '000000' } },
+    left: { style: 'thin', color: { argb: '000000' } },
+    bottom: { style: 'thin', color: { argb: '000000' } },
+    right: { style: 'thin', color: { argb: '000000' } }
 };
 
 // Define the font style for Times New Roman
@@ -294,13 +319,18 @@ Object.entries(scheduleData).forEach(([sectionName, days], index) => {
 
     // Apply styles based on the sectionName
     let fill;
+    let borders = borderStyle; // Apply the same border style to all
     if (sectionName.toLowerCase().includes('lunch')) {
-        fill = yellowFill;
-    } else if (sectionName.toLowerCase().includes('bothams')) {
-        fill = orangeFill;
-    } else if (sectionName.toLowerCase().includes('hole')) {
         fill = redFill;
+    } else if (sectionName.toLowerCase().includes('bothams')) {
+        fill = redFill2;
+    } else if (sectionName.toLowerCase().includes('hole')) {
+        fill = redFill3;
+    } else if (sectionName.toLowerCase().includes('runner')) {
+        fill = redFill4;
     }
+
+    
 
     // Set the font and fill for the first cell
     row.getCell(1).font = { bold: true, size: 13 };
