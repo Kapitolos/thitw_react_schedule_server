@@ -242,6 +242,13 @@ const lightBlueFill = {
     fgColor: { argb: 'FFADD8E6' } // Light blue
 };
 
+const lighterBlueFill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'D8FFFD' } // Light blue
+};
+
+
 const lightGreenFill = {
     type: 'pattern',
     pattern: 'solid',
@@ -302,7 +309,7 @@ headerRow.eachCell((cell) => {
   cell.font = { 
    ...timesNewRomanFont, // Spread the Times New Roman font settings
     bold: true, size: 13 };
-  cell.fill = lightBlueFill; // Set the fill for header row cells
+  cell.fill = lighterBlueFill; // Set the fill for header row cells
 });
 
 // Apply colors to section rows based on the section name
@@ -321,13 +328,13 @@ Object.entries(scheduleData).forEach(([sectionName, days], index) => {
     let fill;
     let borders = borderStyle; // Apply the same border style to all
     if (sectionName.toLowerCase().includes('lunch')) {
-        fill = redFill;
+        fill = lightBlueFill;
     } else if (sectionName.toLowerCase().includes('bothams')) {
-        fill = redFill2;
+        fill = lighterBlueFill;
     } else if (sectionName.toLowerCase().includes('hole')) {
-        fill = redFill3;
+        fill = lightBlueFill;
     } else if (sectionName.toLowerCase().includes('runner')) {
-        fill = redFill4;
+        fill = lighterBlueFill;
     }
 
     
